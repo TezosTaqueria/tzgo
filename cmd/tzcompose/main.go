@@ -87,25 +87,27 @@ func run() error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
-	ectx := compose.NewContext(ctx)
+	ectx, err := compose.NewTaqContext(ctx)
+	if err != nil {
+		return err
+	}
 	ectx.WithLogger(taskLog).
 		WithUrl(rpcUrl).
 		WithApiKey(os.Getenv("TZCOMPOSE_API_KEY")).
 		WithBase(os.Getenv("TZCOMPOSE_BASE_KEY")).
 		WithResume(resume)
 
-	var err error
 	switch cmd {
 	case "version":
 		printVersion()
 	case "validate":
-		err = compose.Run(ectx, fpath, compose.RunModeValidate)
+		err = compose.Run(*ectx, fpath, compose.RunModeValidate)
 	case "simulate":
-		err = compose.Run(ectx, fpath, compose.RunModeSimulate)
+		err = compose.Run(*ectx, fpath, compose.RunModeSimulate)
 	case "run":
-		err = compose.Run(ectx, fpath, compose.RunModeExecute)
+		err = compose.Run(*ectx, fpath, compose.RunModeExecute)
 	case "clone":
-		err = compose.Clone(ectx, version, compose.CloneConfig{
+		err = compose.Clone(*ectx, version, compose.CloneConfig{
 			Name:     name,
 			Contract: addr,
 			IndexUrl: indexUrl,
